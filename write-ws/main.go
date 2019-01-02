@@ -132,7 +132,7 @@ func main() {
 		Name("health").
 		Handler(handlerHealth)
 
-	/// Métier
+	/// Métier - user
 	var handlerUserCreate http.Handler
 	handlerUserCreate = LoggerMiddleware(s.handlerUserCreateFunc, "userCreate", histogram, nil)
 	router.
@@ -147,8 +147,46 @@ func main() {
 	router.
 		Methods("PUT").
 		Path("/users/{id}").
-		Name("users").
+		Name("user_put").
 		Handler(handlerUserUpdate)
+
+	
+	/// Métier - topic
+	var handlerTopicCreate http.Handler
+	handlerTopicCreate = LoggerMiddleware(s.handlerTopicCreateFunc, "topicCreate", histogram, nil)
+	router.
+		Methods("POST").
+		Path("/topics").
+		Name("topics").
+		Handler(handlerTopicCreate)
+	
+	
+	var handlerTopicUpdate http.Handler
+	handlerTopicUpdate = LoggerMiddleware(s.handlerTopicUpdateFunc, "topicUpdate", histogram, nil)
+	router.
+		Methods("PUT").
+		Path("/topics/{id}").
+		Name("topic_put").
+		Handler(handlerTopicUpdate)
+
+	
+	/// Métier - message
+	var handlerMessageCreate http.Handler
+	handlerMessageCreate = LoggerMiddleware(s.handlerMessageCreateFunc, "messageCreate", histogram, nil)
+	router.
+		Methods("POST").
+		Path("/messages").
+		Name("messages").
+		Handler(handlerMessageCreate)
+	
+	
+	var handlerMessageUpdate http.Handler
+	handlerMessageUpdate = LoggerMiddleware(s.handlerMessageUpdateFunc, "messageUpdate", histogram, nil)
+	router.
+		Methods("PUT").
+		Path("/messages/{id}").
+		Name("message_put").
+		Handler(handlerMessageUpdate)
 
 	// add prometheus
 	prometheus.Register(histogram)

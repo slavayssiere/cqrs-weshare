@@ -98,6 +98,38 @@ func main() {
 		Name("user_id").
 		Handler(handlerUserGet)
 
+	var handlerTopicsGet http.Handler
+	handlerTopicsGet = LoggerMiddleware(handlerTopicsGetFunc, "topics", histogram, nil)
+	router.
+		Methods("GET").
+		Path("/topics").
+		Name("topics").
+		Handler(handlerTopicsGet)
+	
+	var handlerTopicGet http.Handler
+	handlerTopicGet = LoggerMiddleware(handlerTopicGetFunc, "topic_id", histogram, nil)
+	router.
+		Methods("GET").
+		Path("/topics/{id}").
+		Name("topic_id").
+		Handler(handlerTopicGet)
+
+	var handlerMessagesGet http.Handler
+	handlerMessagesGet = LoggerMiddleware(handlerMessagesGetFunc, "messages", histogram, nil)
+	router.
+		Methods("GET").
+		Path("/messages").
+		Name("messages").
+		Handler(handlerMessagesGet)
+	
+	var handlerMessageGet http.Handler
+	handlerMessageGet = LoggerMiddleware(handlerMessageGetFunc, "message_id", histogram, nil)
+	router.
+		Methods("GET").
+		Path("/messages/{id}").
+		Name("message_id").
+		Handler(handlerMessageGet)
+	
 	// add prometheus
 	prometheus.Register(histogram)
 	prometheus.Register(promCounter)

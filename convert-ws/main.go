@@ -82,7 +82,9 @@ func main() {
 	}
 
 	log.Println("Connected to NATS at:", s.nc.ConnectedUrl())
-	s.ec.Subscribe("users", s.eventReceive)
+	s.ec.Subscribe("users", s.eventUserReceive)
+	s.ec.Subscribe("topics", s.eventTopicReceive)
+	s.ec.Subscribe("messages", s.eventMessageReceive)
 
 	///////////////////////////////// Http Connection ////////////////////////////////
 	router := mux.NewRouter().StrictSlash(true)

@@ -1,6 +1,8 @@
 version: "2"
 
 services:
+
+  ############################################ Service ############################################
   nats:
     image: 'nats:1.3.0'
     entrypoint: "/gnatsd -DV --http_port 8222"
@@ -9,10 +11,14 @@ services:
       - "8222"
   redis:
     image: 'redis:5.0.3'
+    ports:
+      - "6379:6379"
     expose:
       - "6379"
   mysql:
     image: 'mysql:8.0.13'
+    ports:
+      - "3306:3306"
     expose:
       - "3306"
     environment:
@@ -20,36 +26,32 @@ services:
       - "MYSQL_DATABASE=cqrs"
       - "MYSQL_USER=cqrsuser"
       - "MYSQL_PASSWORD=cqrspassword"
+  
+  ############################################ API Gateway ############################################
   kong-database:
     image: postgres:9.5
     environment:
       - "POSTGRES_USER=kong"
       - "POSTGRES_DB=kong"
-  # kong-init:
-  #   image: kong:0.14
-  #   command: kong migrations up
-  #   links:
-  #     - kong-database
-  #   environment:
-  #     - "KONG_DATABASE=postgres"
-  #     - "KONG_PG_HOST=kong-database"
-  #   depends_on:
-  #     - kong-database
-  # kong:
-  #   image: kong:0.14
-  #   links:
-  #     - kong-database
-  #   environment:
-  #     - "KONG_DATABASE=postgres"
-  #     - "KONG_PG_HOST=kong-database"
-  #     - "KONG_LOG_LEVEL=info"
-  #     - "KONG_ADMIN_LISTEN=0.0.0.0:8001"
-  #   ports:
-  #     - "8000:8000"
-  #     - "8001:8001"
-  #   depends_on:
-  #     - kong-database
+  kong-init:
+    image: cqrs/kong-init:latest
+    links:
+      - kong-database
+    environment:
+      - "KONG_DATABASE=postgres"
+      - "KONG_PG_HOST=kong-database"
+      - "KONG_PROXY_ACCESS_LOG=/dev/stdout"
+      - "KONG_ADMIN_ACCESS_LOG=/dev/stdout"
+      - "KONG_PROXY_ERROR_LOG=/dev/stderr"
+      - "KONG_ADMIN_ERROR_LOG=/dev/stderr"
+      - "KONG_ADMIN_LISTEN=0.0.0.0:8001"
+    depends_on:
+      - kong-database
+    ports:
+      - "8000:8000"
+      - "8001:8001"
 
+  ############################################ Apps ############################################
   write:
     image: 'cqrs/write-ws:latest'
     links:
