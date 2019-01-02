@@ -13,12 +13,12 @@ docker-compose up -d
 curl -i -X POST \
   --url http://localhost:8001/services/ \
   --data 'name=read-cqrs' \
-  --data 'url=http://read:8080'
+  --data 'url=http://loadbalancer:8081'
 
 curl -i -X POST \
   --url http://localhost:8001/services/ \
   --data 'name=write-cqrs' \
-  --data 'url=http://write:8080'
+  --data 'url=http://loadbalancer:8082'
 
 curl -i -X POST \
   --url http://localhost:8001/services/write-cqrs/routes \
@@ -32,18 +32,18 @@ curl -i -X POST \
 ### Test
 
 ```language-bash
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/users -d '{"username":"slavayssiere", "email":"slavayssiere@wescale.fr", "address":"23 rue taitbout 75009", "age":32}'
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/users -d '{"username":"alexis", "email":"alexis@wescale.fr", "address":"23 rue taitbout 75009", "age":22}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/users -d '{"username":"slavayssiere", "email":"slavayssiere@wescale.fr", "address":"23 rue taitbout 75009", "age":32}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/users -d '{"username":"alexis", "email":"alexis@wescale.fr", "address":"23 rue taitbout 75009", "age":22}'
 
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/topics -d '{"topicname":"wespeakcloud"}'
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/topics -d '{"topicname":"perroquetGif"}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/topics -d '{"topicname":"wespeakcloud"}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/topics -d '{"topicname":"perroquetGif"}'
 
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/messages -d '{"userid":1, "topicid":2, "data":"no piaf here"}'
-curl -H "Host:cqrs.com" -X POST http://localhost:8000/messages -d '{"userid":2, "topicid":2, "data":"some perroquet here"}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/messages -d '{"userid":1, "topicid":2, "data":"no piaf here"}'
+curl -i -H "Host:cqrs.com" -X POST http://localhost:8000/messages -d '{"userid":2, "topicid":2, "data":"some perroquet here"}'
 
-curl -H "Host:cqrs.com" -X PUT http://localhost:8000/users/2 -d '{"age":33}'
+curl -i -H "Host:cqrs.com" -X PUT http://localhost:8000/users/2 -d '{"age":33}'
 
-curl -H "Host:cqrs.com" -X GET http://localhost:8000/users/2
+curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/users/2
 ```
 
 ## Stop

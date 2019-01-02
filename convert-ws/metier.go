@@ -29,9 +29,7 @@ type Topic struct {
 // Message a message struct
 type Message struct {
 	gorm.Model
-	User    User   `json:"user" gorm:"foreignkey:ID"`
 	UserID  uint   `json:"userid"`
-	Topic   Topic  `json:"topic" gorm:"foreignkey:ID"`
 	TopicID uint   `json:"topicid"`
 	Data    string `json:"data" gorm:"size:255"`
 }
@@ -72,6 +70,9 @@ func (s server) eventMessageReceive(m *Message) {
 		fmt.Println(err)
 		return
 	}
+
+	// TODO: something here
+
 	err = s.client.HSet("messages", "message_"+fmt.Sprint(m.ID), string(b)).Err()
 	if err != nil {
 		log.Fatal(err)
