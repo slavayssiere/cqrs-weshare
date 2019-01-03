@@ -62,18 +62,47 @@ func (s server) eventTopicReceive(m *Topic) {
 	}
 }
 
+// MessageComplete a message in redis struct
+type MessageComplete struct {
+	User    User   `json:"userid"`
+	TopicID uint   `json:"topicid"`
+	Data    string `json:"data"`
+}
+
 func (s server) eventMessageReceive(m *Message) {
 	log.Println(m)
 	log.Println("user_" + fmt.Sprint(m.ID))
+
 	b, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	// TODO: something here
-
 	err = s.client.HSet("messages", "message_"+fmt.Sprint(m.ID), string(b)).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var u User
+	val, err := s.client.HGet("users", "user_"+fmt.Sprint(m.UserID)).Result()
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal([]byte(val), &u)
+	if err != nil {
+		panic(err)
+	}
+
+	var mc MessageComplete
+	mc.TopicID = m.TopicID
+	mc.Data = m.Data
+	mc.User = u
+	b, err = json.Marshal(mc)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = s.client.RPush("topic_complete_"+fmt.Sprint(m.TopicID), string(b)).Err()
 	if err != nil {
 		log.Fatal(err)
 	}

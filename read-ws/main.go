@@ -11,6 +11,15 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	
+	"github.com/uber/jaeger-lib/metrics"
+
+	"github.com/uber/jaeger-client-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
+
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 
@@ -32,6 +41,22 @@ func LoggerMiddleware(inner http.HandlerFunc, name string, histogram *prometheus
 			time,
 		)
 
+		var serverSpan opentracing.Span
+		wireContext, err := opentracing.GlobalTracer().Extract(
+            opentracing.HTTPHeaders,
+            opentracing.HTTPHeadersCarrier(r.Header))
+        if err != nil {
+            log.Println(err)
+        }
+
+        // Create the span referring to the RPC client if available.
+        // If wireContext == nil, a root span will be created.
+        serverSpan = opentracing.StartSpan(
+            name,
+            ext.RPCServerOption(wireContext))
+
+        defer serverSpan.Finish()
+
 		histogram.WithLabelValues(r.RequestURI).Observe(time.Seconds())
 		if counter != nil {
 			counter.WithLabelValues(r.RequestURI).Inc()
@@ -50,6 +75,32 @@ func main() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+
+	///////////////////////////////// Jaeger Connection ////////////////////////////////
+	cfg := jaegercfg.Configuration{
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans: true,
+			CollectorEndpoint: "http://tracing:14268/api/traces",
+		},
+	}
+	jLogger := jaegerlog.StdLogger
+	jMetricsFactory := metrics.NullFactory
+
+	// Initialize tracer with a logger and a metrics factory
+	closer, err := cfg.InitGlobalTracer(
+		"read-cqrs",
+		jaegercfg.Logger(jLogger),
+		jaegercfg.Metrics(jMetricsFactory),
+	)
+	if err != nil {
+		log.Printf("Could not initialize jaeger tracer: %s", err.Error())
+		return
+	}
+	defer closer.Close()
 
 	///////////////////////////////// Http Connection ////////////////////////////////
 	router := mux.NewRouter().StrictSlash(true)
@@ -113,6 +164,14 @@ func main() {
 		Path("/topics/{id}").
 		Name("topic_id").
 		Handler(handlerTopicGet)
+
+	var handlerTopicCompleteGet http.Handler
+	handlerTopicCompleteGet = LoggerMiddleware(handlerTopicCompleteGetFunc, "topic_complete_id", histogram, nil)
+	router.
+		Methods("GET").
+		Path("/topics/{id}/complete").
+		Name("topic_complete_id").
+		Handler(handlerTopicCompleteGet)
 
 	var handlerMessagesGet http.Handler
 	handlerMessagesGet = LoggerMiddleware(handlerMessagesGetFunc, "messages", histogram, nil)
