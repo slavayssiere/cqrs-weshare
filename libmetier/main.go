@@ -28,6 +28,7 @@ type Message struct {
 
 // MessageComplete is MessageComplete struct
 type MessageComplete struct {
+	ID      uint   `json:"mid"`
 	User    User   `json:"user"`
 	UserID  uint   `json:"userid"`
 	TopicID uint   `json:"topicid"`
