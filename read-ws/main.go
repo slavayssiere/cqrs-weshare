@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Create our recorder.
-	recorder := zipkin.NewRecorder(collector, false, "0.0.0.0:8080", "read-cqrs")
+	recorder := zipkin.NewRecorder(collector, false, "0.0.0.0:8080", "ws-read-cqrs")
 
 	// Create our tracer.
 	tracer, err := zipkin.NewTracer(
