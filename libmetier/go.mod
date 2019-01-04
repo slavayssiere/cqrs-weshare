@@ -1,4 +1,4 @@
-module libmetier
+module github.com/slavayssiere/cqrs-weshare/libmetier
 
 require (
 	github.com/jinzhu/gorm v1.9.2
