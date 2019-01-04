@@ -4,37 +4,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/jinzhu/gorm"
+	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
 
-// User a user struct
-type User struct {
-	gorm.Model
-	Name         string    `json:"username"`
-	Email        string    `json:"email"`
-	Address      string    `json:"address"`
-	Age          int       `json:"age"`
-	CreationTime int64     `json:"creation_time"`
-	CreateTime   time.Time `json:"create_at"`
-}
+// // User a user struct
+// type User struct {
+// 	gorm.Model
+// 	Name         string    `json:"username"`
+// 	Email        string    `json:"email"`
+// 	Address      string    `json:"address"`
+// 	Age          int       `json:"age"`
+// 	CreationTime int64     `json:"creation_time"`
+// 	CreateTime   time.Time `json:"create_at"`
+// }
 
-// Topic a topic struct
-type Topic struct {
-	gorm.Model
-	Name string `json:"topicname"`
-}
+// // Topic a topic struct
+// type Topic struct {
+// 	gorm.Model
+// 	Name string `json:"topicname"`
+// }
 
-// Message a message struct
-type Message struct {
-	gorm.Model
-	UserID  uint   `json:"userid"`
-	TopicID uint   `json:"topicid"`
-	Data    string `json:"data" gorm:"size:255"`
-}
+// // Message a message struct
+// type Message struct {
+// 	gorm.Model
+// 	UserID  uint   `json:"userid"`
+// 	TopicID uint   `json:"topicid"`
+// 	Data    string `json:"data" gorm:"size:255"`
+// }
 
-func (s server) eventUserReceive(m *User) {
+func (s server) eventUserReceive(m *libmetier.User) {
 	log.Println(m)
 	log.Println("user_" + fmt.Sprint(m.ID))
 	b, err := json.Marshal(m)
@@ -48,7 +47,7 @@ func (s server) eventUserReceive(m *User) {
 	}
 }
 
-func (s server) eventTopicReceive(m *Topic) {
+func (s server) eventTopicReceive(m *libmetier.Topic) {
 	log.Println(m)
 	log.Println("topic_" + fmt.Sprint(m.ID))
 	b, err := json.Marshal(m)
@@ -62,15 +61,15 @@ func (s server) eventTopicReceive(m *Topic) {
 	}
 }
 
-// MessageComplete a message in redis struct
-type MessageComplete struct {
-	User    User   `json:"user"`
-	UserID  uint   `json:"userid"`
-	TopicID uint   `json:"topicid"`
-	Data    string `json:"data"`
-}
+// // MessageComplete a message in redis struct
+// type MessageComplete struct {
+// 	User    User   `json:"user"`
+// 	UserID  uint   `json:"userid"`
+// 	TopicID uint   `json:"topicid"`
+// 	Data    string `json:"data"`
+// }
 
-func (s server) eventMessageReceive(m *Message) {
+func (s server) eventMessageReceive(m *libmetier.Message) {
 	log.Println(m)
 	log.Println("user_" + fmt.Sprint(m.ID))
 
@@ -84,7 +83,7 @@ func (s server) eventMessageReceive(m *Message) {
 		log.Fatal(err)
 	}
 
-	var u User
+	var u libmetier.User
 	val, err := s.client.HGet("users", "user_"+fmt.Sprint(m.UserID)).Result()
 	if err != nil {
 		panic(err)
@@ -94,7 +93,7 @@ func (s server) eventMessageReceive(m *Message) {
 		panic(err)
 	}
 
-	var mc MessageComplete
+	var mc libmetier.MessageComplete
 	mc.TopicID = m.TopicID
 	mc.Data = m.Data
 	mc.User = u
