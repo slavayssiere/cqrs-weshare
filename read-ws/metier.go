@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
@@ -106,24 +105,14 @@ func getUser(mID string) libmetier.User {
 
 func getTopicComplete(mID string) libmetier.TopicComplete {
 	var tc libmetier.TopicComplete
-	t := getTopic(mID)
-	tc.Name = t.Name
-	tc.ID = t.ID
-
-	val, err := client.LRange("topic_complete_"+mID, 0, 10).Result()
+	val, err := client.HGet("topics_complete", "topic_"+mID).Result()
 	if err != nil {
 		panic(err)
 	}
-	log.Println(val)
-	for v := range val {
-		var m libmetier.MessageComplete
-		log.Println(val[v])
-		err = json.Unmarshal([]byte(val[v]), &m)
-		if err != nil {
-			panic(err)
-		}
-		tc.Conversation = append(tc.Conversation, m)
-	}
 
+	err = json.Unmarshal([]byte(val), &tc)
+	if err != nil {
+		panic(err)
+	}
 	return tc
 }

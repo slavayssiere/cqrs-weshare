@@ -4,38 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
 
-// // User a user struct
-// type User struct {
-// 	gorm.Model
-// 	Name         string    `json:"username"`
-// 	Email        string    `json:"email"`
-// 	Address      string    `json:"address"`
-// 	Age          int       `json:"age"`
-// 	CreationTime int64     `json:"creation_time"`
-// 	CreateTime   time.Time `json:"create_at"`
-// }
-
-// // Topic a topic struct
-// type Topic struct {
-// 	gorm.Model
-// 	Name string `json:"topicname"`
-// }
-
-// // Message a message struct
-// type Message struct {
-// 	gorm.Model
-// 	UserID  uint   `json:"userid"`
-// 	TopicID uint   `json:"topicid"`
-// 	Data    string `json:"data" gorm:"size:255"`
-// }
-
-func (s server) eventUserReceive(m *libmetier.User) {
-	log.Println(m)
-	log.Println("user_" + fmt.Sprint(m.ID))
+func (s server) setUser(m *libmetier.User) {
 	b, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println(err)
@@ -47,9 +21,20 @@ func (s server) eventUserReceive(m *libmetier.User) {
 	}
 }
 
-func (s server) eventTopicReceive(m *libmetier.Topic) {
-	log.Println(m)
-	log.Println("topic_" + fmt.Sprint(m.ID))
+func (s server) getUser(id uint) libmetier.User {
+	var u libmetier.User
+	val, err := s.client.HGet("users", "user_"+fmt.Sprint(id)).Result()
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal([]byte(val), &u)
+	if err != nil {
+		panic(err)
+	}
+	return u
+}
+
+func (s server) setTopic(m *libmetier.Topic) {
 	b, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println(err)
@@ -61,18 +46,20 @@ func (s server) eventTopicReceive(m *libmetier.Topic) {
 	}
 }
 
-// // MessageComplete a message in redis struct
-// type MessageComplete struct {
-// 	User    User   `json:"user"`
-// 	UserID  uint   `json:"userid"`
-// 	TopicID uint   `json:"topicid"`
-// 	Data    string `json:"data"`
-// }
+func (s server) getTopic(id uint) libmetier.Topic {
+	var u libmetier.Topic
+	val, err := s.client.HGet("topics", "topic_"+fmt.Sprint(id)).Result()
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal([]byte(val), &u)
+	if err != nil {
+		panic(err)
+	}
+	return u
+}
 
-func (s server) eventMessageReceive(m *libmetier.Message) {
-	log.Println(m)
-	log.Println("user_" + fmt.Sprint(m.ID))
-
+func (s server) setMessage(m *libmetier.Message) {
 	b, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println(err)
@@ -82,28 +69,48 @@ func (s server) eventMessageReceive(m *libmetier.Message) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
-	var u libmetier.User
-	val, err := s.client.HGet("users", "user_"+fmt.Sprint(m.UserID)).Result()
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal([]byte(val), &u)
-	if err != nil {
-		panic(err)
-	}
-
-	var mc libmetier.MessageComplete
-	mc.TopicID = m.TopicID
-	mc.Data = m.Data
-	mc.User = u
-	mc.UserID = u.ID
-	b, err = json.Marshal(mc)
+func (s server) setMessageCompleteByTopic(m *libmetier.MessageComplete, topicid uint) {
+	b, err := json.Marshal(m)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = s.client.RPush("topic_complete_"+fmt.Sprint(m.TopicID), string(b)).Err()
+	err = s.client.HSet("messages_topics", "topic_"+fmt.Sprint(topicid)+"_"+fmt.Sprint(m.ID), string(b)).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (s server) getMessageCompleteByTopic(topicid uint) []libmetier.MessageComplete {
+	var ml []libmetier.MessageComplete
+	keys, _ := s.client.HKeys("messages_topics").Result()
+	for i := range keys {
+		if strings.Contains(fmt.Sprint(keys[i]), "topic_"+fmt.Sprint(topicid)) {
+			log.Printf("key: %s\n", fmt.Sprint(keys[i]))
+			var m libmetier.MessageComplete
+			val, err := s.client.HGet("messages_topics", fmt.Sprint(keys[i])).Result()
+			if err != nil {
+				panic(err)
+			}
+			err = json.Unmarshal([]byte(val), &m)
+			if err != nil {
+				panic(err)
+			}
+			ml = append(ml, m)
+		}
+	}
+	return ml
+}
+
+func (s server) setTopicComplete(m *libmetier.TopicComplete) {
+	b, err := json.Marshal(m)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = s.client.HSet("topics_complete", "topic_"+fmt.Sprint(m.ID), string(b)).Err()
 	if err != nil {
 		log.Fatal(err)
 	}

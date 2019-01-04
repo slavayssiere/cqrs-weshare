@@ -25,10 +25,13 @@ curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/users/2
 
 curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/topics
 curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/topics/2
-curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/topics/2/complete
+
+curl -H "Host:cqrs.com" -X GET http://localhost:8000/topics/2/complete | jq .
 
 curl -i -H "Host:cqrs.com" -X GET http://localhost:8000/messages/1
 curl -i -H "Host:cqrs.com" -X PUT http://localhost:8000/messages/1 -d '{"data":"no perroquet here"}'
+
+curl -H "Host:cqrs.com" -X GET http://localhost:8000/topics/2/complete | jq .
 ```
 
 ## Stop
