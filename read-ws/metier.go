@@ -5,44 +5,18 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jinzhu/gorm"
+	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
 
-// Message a message struct
-type Message struct {
-	gorm.Model
-	User    User   `json:"user" gorm:"foreignkey:ID"`
-	UserID  uint   `json:"userid"`
-	Topic   Topic  `json:"topic" gorm:"foreignkey:ID"`
-	TopicID uint   `json:"topicid"`
-	Data    string `json:"data" gorm:"size:255"`
-}
-
-// Topic a topic struct
-type Topic struct {
-	gorm.Model
-	Name string `json:"topicname"`
-}
-
-// User a user struct
-type User struct {
-	gorm.Model
-	Name         string `json:"username"`
-	Email        string `json:"email"`
-	Address      string `json:"address" gorm:"size:255"`
-	Age          int    `json:"age"`
-	CreationTime int64  `json:"creation_time" gorm:"-"`
-}
-
-func getMessages() []Message {
-	var us []Message
+func getMessages() []libmetier.Message {
+	var us []libmetier.Message
 	val, err := client.HGetAll("messages").Result()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(val)
 	for v := range val {
-		var u Message
+		var u libmetier.Message
 		err = json.Unmarshal([]byte(val[v]), &u)
 		if err != nil {
 			panic(err)
@@ -52,15 +26,15 @@ func getMessages() []Message {
 	return us
 }
 
-func getTopics() []Topic {
-	var us []Topic
+func getTopics() []libmetier.Topic {
+	var us []libmetier.Topic
 	val, err := client.HGetAll("topics").Result()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(val)
 	for v := range val {
-		var u Topic
+		var u libmetier.Topic
 		err = json.Unmarshal([]byte(val[v]), &u)
 		if err != nil {
 			panic(err)
@@ -70,15 +44,15 @@ func getTopics() []Topic {
 	return us
 }
 
-func getUsers() []User {
-	var us []User
+func getUsers() []libmetier.User {
+	var us []libmetier.User
 	val, err := client.HGetAll("users").Result()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(val)
 	for v := range val {
-		var u User
+		var u libmetier.User
 		err = json.Unmarshal([]byte(val[v]), &u)
 		if err != nil {
 			panic(err)
@@ -88,8 +62,8 @@ func getUsers() []User {
 	return us
 }
 
-func getMessage(mID string) Message {
-	var m Message
+func getMessage(mID string) libmetier.Message {
+	var m libmetier.Message
 	val, err := client.HGet("messages", "message_"+mID).Result()
 	if err != nil {
 		panic(err)
@@ -102,8 +76,8 @@ func getMessage(mID string) Message {
 	return m
 }
 
-func getTopic(mID string) Topic {
-	var m Topic
+func getTopic(mID string) libmetier.Topic {
+	var m libmetier.Topic
 	val, err := client.HGet("topics", "topic_"+mID).Result()
 	if err != nil {
 		panic(err)
@@ -116,8 +90,8 @@ func getTopic(mID string) Topic {
 	return m
 }
 
-func getUser(mID string) User {
-	var m User
+func getUser(mID string) libmetier.User {
+	var m libmetier.User
 	val, err := client.HGet("users", "user_"+mID).Result()
 	if err != nil {
 		panic(err)
@@ -130,23 +104,8 @@ func getUser(mID string) User {
 	return m
 }
 
-// TopicComplete is TopicComplete struct
-type TopicComplete struct {
-	ID           uint              `json:"id"`
-	Name         string            `json:"name"`
-	Conversation []MessageComplete `json:"conversation"`
-}
-
-// MessageComplete is MessageComplete struct
-type MessageComplete struct {
-	User    User   `json:"user"`
-	UserID  uint   `json:"userid"`
-	TopicID uint   `json:"topicid"`
-	Data    string `json:"data"`
-}
-
-func getTopicComplete(mID string) TopicComplete {
-	var tc TopicComplete
+func getTopicComplete(mID string) libmetier.TopicComplete {
+	var tc libmetier.TopicComplete
 	t := getTopic(mID)
 	tc.Name = t.Name
 	tc.ID = t.ID
@@ -157,7 +116,7 @@ func getTopicComplete(mID string) TopicComplete {
 	}
 	log.Println(val)
 	for v := range val {
-		var m MessageComplete
+		var m libmetier.MessageComplete
 		log.Println(val[v])
 		err = json.Unmarshal([]byte(val[v]), &m)
 		if err != nil {

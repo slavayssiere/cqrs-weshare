@@ -6,11 +6,12 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
 
 func (s server) handlerMessageCreateFunc(w http.ResponseWriter, r *http.Request) {
 
-	var u Message
+	var u libmetier.Message
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&u)
 	if err != nil {
@@ -32,7 +33,7 @@ func (s server) handlerMessageUpdateFunc(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	var u Message
+	var u libmetier.Message
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&u)
 	if err != nil {

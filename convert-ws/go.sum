@@ -36,6 +36,8 @@ github.com/slavayssiere/cqrs-weshare v0.0.1 h1:Z2WJTXOxzWSXzZ8azNYEUvBt/K+G1ISAa
 github.com/slavayssiere/cqrs-weshare v0.0.1/go.mod h1:YCW4V23IQMbX0YD7UeyrUusLpp25/tifJ2s+UaFP854=
 github.com/slavayssiere/cqrs-weshare v0.0.2 h1:ioBR7YnCggFnkrDogQoBn/9Z1AFtRdNjXcnolPGEkv8=
 github.com/slavayssiere/cqrs-weshare v0.0.2/go.mod h1:YCW4V23IQMbX0YD7UeyrUusLpp25/tifJ2s+UaFP854=
+github.com/slavayssiere/cqrs-weshare v0.1.0 h1:dM5TKbGCgS/zgCiz8Bx3xVGE48s9rttWkCGTsNSkl5k=
+github.com/slavayssiere/cqrs-weshare v0.1.0/go.mod h1:YCW4V23IQMbX0YD7UeyrUusLpp25/tifJ2s+UaFP854=
 github.com/slavayssiere/cqrs-weshare/libmetier v0.0.0-20190104080341-96593d62b8ad h1:ZL61D2bIvSWY74w2VEWZcvZ+dPnSmnqnR34UX4rZRSU=
 github.com/slavayssiere/cqrs-weshare/libmetier v0.0.0-20190104080341-96593d62b8ad/go.mod h1:b6+XsTeypkRNt37+fXfppnSYiGtN9A/5aBxUkYhxtXE=
 golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 h1:mKdxBk7AujPs8kU4m80U72y/zjbZ3UcXC7dClwKbUI0=

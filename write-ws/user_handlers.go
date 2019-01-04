@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/slavayssiere/cqrs-weshare/libmetier"
 )
 
 func (s server) handlerUserCreateFunc(w http.ResponseWriter, r *http.Request) {
 
-	var u User
+	var u libmetier.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&u)
 	if err != nil {
@@ -36,7 +37,7 @@ func (s server) handlerUserUpdateFunc(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	var u User
+	var u libmetier.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&u)
 	if err != nil {

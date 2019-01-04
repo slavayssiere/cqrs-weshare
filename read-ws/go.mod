@@ -17,7 +17,6 @@ require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.6.2
 	github.com/jinzhu/gorm v1.9.2
-	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/nats-io/go-nats v1.7.0
 	github.com/nats-io/nkeys v0.0.2 // indirect
 	github.com/nats-io/nuid v1.0.0 // indirect
@@ -28,6 +27,8 @@ require (
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
+	github.com/slavayssiere/cqrs-weshare v0.1.0
+	github.com/slavayssiere/cqrs-weshare/libmetier v0.0.0-20190104080341-96593d62b8ad
 	github.com/uber/jaeger-client-go v2.15.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
 )
