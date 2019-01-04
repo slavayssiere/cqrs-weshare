@@ -3,8 +3,8 @@
 ## Start
 
 ```language-bash
-cd iac
-docker-compose up -d
+./ci-cd/build-all.sh
+./ci-cd/deploy.sh
 ```
 
 ### Test

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -13,7 +14,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	
+	zipkin "github.com/openzipkin-contrib/zipkin-go-opentracing"
+
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 
 )
 
@@ -30,20 +36,41 @@ func LoggerMiddleware(inner http.HandlerFunc, name string, histogram *prometheus
 
 		start := time.Now()
 
+		if strings.Compare(name,"health") != 0 {
+			var serverSpan opentracing.Span
+			wireContext, err := opentracing.GlobalTracer().Extract(
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(r.Header))
+			if err != nil {
+				log.Println(err)
+				log.Println(r.Header)
+			}
+
+			// Create the span referring to the RPC client if available.
+			// If wireContext == nil, a root span will be created.
+			serverSpan = opentracing.StartSpan(
+				name,
+				ext.RPCServerOption(wireContext))
+
+			defer serverSpan.Finish()
+		}
+
 		inner.ServeHTTP(w, r)
 
-		time := time.Since(start)
-		log.Printf(
-			"%s\t%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			name,
-			time,
-		)
+		if strings.Compare(name,"health") != 0 {
+			time := time.Since(start)
+			log.Printf(
+				"%s\t%s\t%s\t%s",
+				r.Method,
+				r.RequestURI,
+				name,
+				time,
+			)
 
-		histogram.WithLabelValues(r.RequestURI).Observe(time.Seconds())
-		if counter != nil {
-			counter.WithLabelValues(r.RequestURI).Inc()
+			histogram.WithLabelValues(r.RequestURI).Observe(time.Seconds())
+			if counter != nil {
+				counter.WithLabelValues(r.RequestURI).Inc()
+			}
 		}
 	})
 }
@@ -77,6 +104,29 @@ func main() {
 
 	fmt.Println("Connected to NATS at:", s.nc.ConnectedUrl())
 
+	///////////////////////////////// Zipkin Connection ////////////////////////////////
+	collector, err := zipkin.NewHTTPCollector("http://tracing:9411/api/v1/spans")
+	if err != nil {
+		log.Printf("unable to create Zipkin HTTP collector: %+v\n", err)
+		os.Exit(-1)
+	}
+
+	// Create our recorder.
+	recorder := zipkin.NewRecorder(collector, false, "0.0.0.0:8080", "read-cqrs")
+
+	// Create our tracer.
+	tracer, err := zipkin.NewTracer(
+		recorder,
+		zipkin.ClientServerSameSpan(true),
+		zipkin.TraceID128Bit(true),
+	)
+	if err != nil {
+		log.Printf("unable to create Zipkin tracer: %+v\n", err)
+		os.Exit(-1)
+	}
+
+	// Explicitly set our tracer to be the default tracer.
+	opentracing.InitGlobalTracer(tracer)
 
 	///////////////////////////////// MySQL Connection ////////////////////////////////
 	dbPassword := os.Getenv("MYSQL_PASSWORD")

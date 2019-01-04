@@ -1,5 +1,20 @@
 #!/bin/bash
 
+ABSPATH=$(cd "$(dirname "$0")"; pwd)
+echo $ABSPATH
+
+cd $ABSPATH/../iac
+docker-compose up -d
+cd -
+
+while ! nc -z localhost 8001; do   
+  echo "wait for Kong started..."
+  sleep 1
+done
+
+echo "Kong started !"
+sleep 10
+
 curl -i -X POST \
   --url http://localhost:8001/services/ \
   --data 'name=read-cqrs' \

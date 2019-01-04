@@ -13,12 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	
-	// "github.com/uber/jaeger-client-go"
-	// "github.com/uber/jaeger-client-go/zipkin"
 	zipkin "github.com/openzipkin-contrib/zipkin-go-opentracing"
-	// jaegercfg "github.com/uber/jaeger-client-go/config"
-	// jaegerlog "github.com/uber/jaeger-client-go/log"
-	// jaegerprom "github.com/uber/jaeger-lib/metrics/prometheus"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -82,37 +77,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	///////////////////////////////// Jaeger Connection ////////////////////////////////
-	// jLogger := jaegerlog.StdLogger
-	// jMetricsFactory := jaegerprom.New()
-	// cfg := jaegercfg.Configuration{
-	// 	Sampler: &jaegercfg.SamplerConfig{
-	// 		Type:  jaeger.SamplerTypeConst,
-	// 		Param: 1,
-	// 	},
-	// 	Reporter: &jaegercfg.ReporterConfig{
-	// 		LogSpans: true,
-	// 		CollectorEndpoint: "http://tracing:14268/api/traces",
-	// 		BufferFlushInterval: 500*time.Millisecond,
-	// 	},
-	// }
-	// zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
-	
-	// closer, err := cfg.InitGlobalTracer(
-	// 	"read-cqrs",
-	// 	jaegercfg.Logger(jLogger),
-	// 	jaegercfg.Metrics(jMetricsFactory),
-	// 	jaegercfg.Injector(opentracing.HTTPHeaders, zipkinPropagator),
-	// 	jaegercfg.Extractor(opentracing.HTTPHeaders, zipkinPropagator),
-	// 	jaegercfg.ZipkinSharedRPCSpan(true),
-	// 	jaegercfg.Gen128Bit(true),
-	//   )
-	  
-	//   if err != nil {
-	// 	  log.Printf("Could not initialize jaeger tracer: %s", err.Error())
-	// 	  return
-	//   }
-	//   defer closer.Close()
+	///////////////////////////////// Zipkin Connection ////////////////////////////////
 	collector, err := zipkin.NewHTTPCollector("http://tracing:9411/api/v1/spans")
 	if err != nil {
 		log.Printf("unable to create Zipkin HTTP collector: %+v\n", err)
