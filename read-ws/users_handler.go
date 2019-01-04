@@ -8,7 +8,6 @@ import (
 )
 
 func handlerUsersFunc(w http.ResponseWriter, r *http.Request) {
-
 	us := getUsers()
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -20,7 +19,6 @@ func handlerUsersFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerUserFunc(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	userID := vars["id"]
 

@@ -7,28 +7,6 @@ cd iac
 docker-compose up -d
 ```
 
-### Configure Kong
-
-```language-bash
-curl -i -X POST \
-  --url http://localhost:8001/services/ \
-  --data 'name=read-cqrs' \
-  --data 'url=http://loadbalancer:8081'
-
-curl -i -X POST \
-  --url http://localhost:8001/services/ \
-  --data 'name=write-cqrs' \
-  --data 'url=http://loadbalancer:8082'
-
-curl -i -X POST \
-  --url http://localhost:8001/services/write-cqrs/routes \
-  --data 'hosts[]=cqrs.com&methods[]=POST&methods[]=PUT'
-
-curl -i -X POST \
-  --url http://localhost:8001/services/read-cqrs/routes \
-  --data 'hosts[]=cqrs.com&methods[]=GET'
-```
-
 ### Test
 
 ```language-bash

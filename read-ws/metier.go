@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/jinzhu/gorm"
 )
@@ -131,9 +132,17 @@ func getUser(mID string) User {
 
 // TopicComplete is TopicComplete struct
 type TopicComplete struct {
-	ID           uint      `json:"id"`
-	Name         string    `json:"name"`
-	Conversation []Message `json:"conversation"`
+	ID           uint              `json:"id"`
+	Name         string            `json:"name"`
+	Conversation []MessageComplete `json:"conversation"`
+}
+
+// MessageComplete is MessageComplete struct
+type MessageComplete struct {
+	User    User   `json:"user"`
+	UserID  uint   `json:"userid"`
+	TopicID uint   `json:"topicid"`
+	Data    string `json:"data"`
 }
 
 func getTopicComplete(mID string) TopicComplete {
@@ -146,9 +155,10 @@ func getTopicComplete(mID string) TopicComplete {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(val)
+	log.Println(val)
 	for v := range val {
-		var m Message
+		var m MessageComplete
+		log.Println(val[v])
 		err = json.Unmarshal([]byte(val[v]), &m)
 		if err != nil {
 			panic(err)

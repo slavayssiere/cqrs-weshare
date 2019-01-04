@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -12,11 +13,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	
-	"github.com/uber/jaeger-lib/metrics"
-
-	"github.com/uber/jaeger-client-go"
-	jaegercfg "github.com/uber/jaeger-client-go/config"
-	jaegerlog "github.com/uber/jaeger-client-go/log"
+	// "github.com/uber/jaeger-client-go"
+	// "github.com/uber/jaeger-client-go/zipkin"
+	zipkin "github.com/openzipkin-contrib/zipkin-go-opentracing"
+	// jaegercfg "github.com/uber/jaeger-client-go/config"
+	// jaegerlog "github.com/uber/jaeger-client-go/log"
+	// jaegerprom "github.com/uber/jaeger-lib/metrics/prometheus"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -29,37 +31,41 @@ func LoggerMiddleware(inner http.HandlerFunc, name string, histogram *prometheus
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		start := time.Now()
+		if strings.Compare(name,"health") != 0 {
+			var serverSpan opentracing.Span
+			wireContext, err := opentracing.GlobalTracer().Extract(
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(r.Header))
+			if err != nil {
+				log.Println(err)
+				log.Println(r.Header)
+			}
+
+			// Create the span referring to the RPC client if available.
+			// If wireContext == nil, a root span will be created.
+			serverSpan = opentracing.StartSpan(
+				name,
+				ext.RPCServerOption(wireContext))
+
+			defer serverSpan.Finish()
+		}
 
 		inner.ServeHTTP(w, r)
 
-		time := time.Since(start)
-		log.Printf(
-			"%s\t%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			name,
-			time,
-		)
+		if strings.Compare(name,"health") != 0 {
+			time := time.Since(start)
+			log.Printf(
+				"%s\t%s\t%s\t%s",
+				r.Method,
+				r.RequestURI,
+				name,
+				time,
+			)
 
-		var serverSpan opentracing.Span
-		wireContext, err := opentracing.GlobalTracer().Extract(
-            opentracing.HTTPHeaders,
-            opentracing.HTTPHeadersCarrier(r.Header))
-        if err != nil {
-            log.Println(err)
-        }
-
-        // Create the span referring to the RPC client if available.
-        // If wireContext == nil, a root span will be created.
-        serverSpan = opentracing.StartSpan(
-            name,
-            ext.RPCServerOption(wireContext))
-
-        defer serverSpan.Finish()
-
-		histogram.WithLabelValues(r.RequestURI).Observe(time.Seconds())
-		if counter != nil {
-			counter.WithLabelValues(r.RequestURI).Inc()
+			histogram.WithLabelValues(r.RequestURI).Observe(time.Seconds())
+			if counter != nil {
+				counter.WithLabelValues(r.RequestURI).Inc()
+			}
 		}
 	})
 }
@@ -77,30 +83,59 @@ func main() {
 	})
 
 	///////////////////////////////// Jaeger Connection ////////////////////////////////
-	cfg := jaegercfg.Configuration{
-		Sampler: &jaegercfg.SamplerConfig{
-			Type:  jaeger.SamplerTypeConst,
-			Param: 1,
-		},
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans: true,
-			CollectorEndpoint: "http://tracing:14268/api/traces",
-		},
+	// jLogger := jaegerlog.StdLogger
+	// jMetricsFactory := jaegerprom.New()
+	// cfg := jaegercfg.Configuration{
+	// 	Sampler: &jaegercfg.SamplerConfig{
+	// 		Type:  jaeger.SamplerTypeConst,
+	// 		Param: 1,
+	// 	},
+	// 	Reporter: &jaegercfg.ReporterConfig{
+	// 		LogSpans: true,
+	// 		CollectorEndpoint: "http://tracing:14268/api/traces",
+	// 		BufferFlushInterval: 500*time.Millisecond,
+	// 	},
+	// }
+	// zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
+	
+	// closer, err := cfg.InitGlobalTracer(
+	// 	"read-cqrs",
+	// 	jaegercfg.Logger(jLogger),
+	// 	jaegercfg.Metrics(jMetricsFactory),
+	// 	jaegercfg.Injector(opentracing.HTTPHeaders, zipkinPropagator),
+	// 	jaegercfg.Extractor(opentracing.HTTPHeaders, zipkinPropagator),
+	// 	jaegercfg.ZipkinSharedRPCSpan(true),
+	// 	jaegercfg.Gen128Bit(true),
+	//   )
+	  
+	//   if err != nil {
+	// 	  log.Printf("Could not initialize jaeger tracer: %s", err.Error())
+	// 	  return
+	//   }
+	//   defer closer.Close()
+	collector, err := zipkin.NewHTTPCollector("http://tracing:9411/api/v1/spans")
+	if err != nil {
+		log.Printf("unable to create Zipkin HTTP collector: %+v\n", err)
+		os.Exit(-1)
 	}
-	jLogger := jaegerlog.StdLogger
-	jMetricsFactory := metrics.NullFactory
 
-	// Initialize tracer with a logger and a metrics factory
-	closer, err := cfg.InitGlobalTracer(
-		"read-cqrs",
-		jaegercfg.Logger(jLogger),
-		jaegercfg.Metrics(jMetricsFactory),
+	// Create our recorder.
+	recorder := zipkin.NewRecorder(collector, false, "0.0.0.0:8080", "read-cqrs")
+
+	// Create our tracer.
+	tracer, err := zipkin.NewTracer(
+		recorder,
+		zipkin.ClientServerSameSpan(true),
+		zipkin.TraceID128Bit(true),
 	)
 	if err != nil {
-		log.Printf("Could not initialize jaeger tracer: %s", err.Error())
-		return
+		log.Printf("unable to create Zipkin tracer: %+v\n", err)
+		os.Exit(-1)
 	}
-	defer closer.Close()
+
+	// Explicitly set our tracer to be the default tracer.
+	opentracing.InitGlobalTracer(tracer)
+
 
 	///////////////////////////////// Http Connection ////////////////////////////////
 	router := mux.NewRouter().StrictSlash(true)

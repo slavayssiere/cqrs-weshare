@@ -64,7 +64,8 @@ func (s server) eventTopicReceive(m *Topic) {
 
 // MessageComplete a message in redis struct
 type MessageComplete struct {
-	User    User   `json:"userid"`
+	User    User   `json:"user"`
+	UserID  uint   `json:"userid"`
 	TopicID uint   `json:"topicid"`
 	Data    string `json:"data"`
 }
@@ -97,6 +98,7 @@ func (s server) eventMessageReceive(m *Message) {
 	mc.TopicID = m.TopicID
 	mc.Data = m.Data
 	mc.User = u
+	mc.UserID = u.ID
 	b, err = json.Marshal(mc)
 	if err != nil {
 		fmt.Println(err)

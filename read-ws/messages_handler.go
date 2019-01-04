@@ -8,7 +8,6 @@ import (
 )
 
 func handlerMessagesGetFunc(w http.ResponseWriter, r *http.Request) {
-
 	us := getMessages()
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -20,7 +19,6 @@ func handlerMessagesGetFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerMessageGetFunc(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	messageID := vars["id"]
 

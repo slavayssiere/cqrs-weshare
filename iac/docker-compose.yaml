@@ -46,6 +46,7 @@ services:
     links:
       - kong-database
       - loadbalancer
+      - tracing
     environment:
       - "KONG_DATABASE=postgres"
       - "KONG_PG_HOST=kong-database"
@@ -63,20 +64,17 @@ services:
       - "traefik.enable=false"
   loadbalancer:
     image: traefik:1.7.6
-    command: 
-      - --api 
-      - --docker
-      - "--entryPoints=Name:read Address::8081 Compress:true"
-      - "--entryPoints=Name:write Address::8082 Compress:true"
     ports:
       - "80"        # The HTTP port
       - "8080:8080" # The Web UI (enabled by --api)
+      - "8083:8083"
     expose:
       - "80"
       - "8081"
       - "8082"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - ./traefik.toml:/traefik.toml
     labels:
       - "traefik.enable=false"
 

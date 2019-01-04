@@ -19,7 +19,6 @@ func handlerTopicsGetFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerTopicGetFunc(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 
 	topicID := vars["id"]
@@ -35,7 +34,6 @@ func handlerTopicGetFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerTopicCompleteGetFunc(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	topicID := vars["id"]
 

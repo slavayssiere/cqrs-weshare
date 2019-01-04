@@ -1,0 +1,42 @@
+defaultEntryPoints = ["http"]
+
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+    compress = true
+  [entryPoints.read]
+    address = ":8081"
+    compress = true
+  [entryPoints.write]
+    address = ":8082"
+    compress = true
+  [entryPoints.metrics]
+    address = ":8083"
+    compress = true
+  [entryPoints.dashboard]
+    address = ":8080"
+    compress = true
+
+[api]
+  entryPoint = "dashboard"
+  dashboard = true
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+watch = true
+exposedByDefault = true
+
+[metrics]
+  [metrics.prometheus]
+    entryPoint = "metrics"
+
+[tracing]
+  backend = "zipkin"
+  serviceName = "traefik"
+  spanNameLimit = 0
+
+  [tracing.zipkin]
+    httpEndpoint = "http://tracing:9411/api/v1/spans"
+    debug = false
+    sameSpan = true
+    id128Bit = true
