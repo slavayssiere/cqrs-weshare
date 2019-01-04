@@ -148,6 +148,16 @@ services:
       - "9411"
     labels:
       - "traefik.enable=false"
-
-
-  
+  prometheus:
+    image: prom/prometheus:v2.6.0
+    links:
+      - read
+      - write
+      - convert
+      - loadbalancer
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    labels:
+      - "traefik.enable=false"

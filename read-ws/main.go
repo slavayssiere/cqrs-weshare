@@ -106,12 +106,12 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "webservice_uri_duration_seconds",
+		Name: "read_ws_uri_duration_seconds",
 		Help: "Time to respond",
 	}, []string{"uri"})
 
 	promCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "webservice_count",
+		Name: "read_ws_count",
 		Help: "counter for api",
 	}, []string{"uri"})
 
