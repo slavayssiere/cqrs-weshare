@@ -90,6 +90,7 @@ services:
       - "MYSQL_PASSWORD=cqrspassword"
       - "MYSQL_HOST=mysql"
       - "MYSQL_NAME=cqrs"
+      - "ZIPKIN_ENDPOINT=http://tracing:14268/api/traces"
     depends_on:
       - nats
       - mysql
@@ -106,7 +107,7 @@ services:
     environment:
       - "NATS_URI=nats://nats:4222"
       - "REDIS_URI=redis:6379"
-      - "JAEGER_ENDPOINT=http://tracing:14268/api/traces"
+      - "ZIPKIN_ENDPOINT=http://tracing:14268/api/traces"
     depends_on:
       - nats
     expose:

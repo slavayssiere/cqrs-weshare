@@ -105,7 +105,8 @@ func main() {
 	fmt.Println("Connected to NATS at:", s.nc.ConnectedUrl())
 
 	///////////////////////////////// Zipkin Connection ////////////////////////////////
-	collector, err := zipkin.NewHTTPCollector("http://tracing:9411/api/v1/spans")
+	zuri := os.Getenv("ZIPKIN_ENDPOINT")
+	collector, err := zipkin.NewHTTPCollector(zuri)
 	if err != nil {
 		log.Printf("unable to create Zipkin HTTP collector: %+v\n", err)
 		os.Exit(-1)
